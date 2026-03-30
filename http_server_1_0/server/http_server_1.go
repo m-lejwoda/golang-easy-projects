@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"strings"
+	
 )
 
 type HTTPMessage struct {
@@ -14,7 +15,7 @@ type HTTPMessage struct {
 	Body      string
 }
 
-func parseHttp(reader io.Reader) {
+func parseHttp(reader io.Reader, conn net.Conn) {
 	scanner := bufio.NewScanner(reader)
 	msg := HTTPMessage{
 		Headers: make(map[string]string),
@@ -33,12 +34,14 @@ func parseHttp(reader io.Reader) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "" {
-			fmt.Println("test")
-
 			break
 		}
 		msg.Body += line
+	}
+	//http request
+	if msg.StartLine != "" {
 		fmt.Printf("%+v\n", msg)
+		removeConnection(conn)
 	}
 
 }
@@ -51,14 +54,10 @@ func handleConnection(conn net.Conn) {
 	fmt.Println("Added Connection", conn)
 	reader := bufio.NewReader(conn)
 	for {
-		parseHttp(reader)
-
-		// if message != EOF
-		// splitRequest(message)
+		parseHttp(reader, conn)
 
 	}
 
-	removeConnection(conn)
 }
 
 func startHttpServer10() {
