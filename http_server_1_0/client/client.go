@@ -44,8 +44,8 @@ func sendImage() []byte {
 
 func createConnection() {
 	fmt.Println("createConnection")
-	// var simple_request = sendSimpleHttpRequest()
-	var simple_request = sendImage()
+	var simple_request = sendSimpleHttpRequest()
+	// var simple_request = sendImage()
 	conn, err := net.Dial("tcp", ":8080")
 	if err != nil {
 		//handle error
