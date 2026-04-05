@@ -27,7 +27,7 @@ func sendImage() []byte {
 	path := filepath.Join("/home/michal/PyCharmMiscProject/golang-easy-projects", "village.jpg")
 	data, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println("Bląd odczytu")
+		fmt.Println("Problem with read")
 	}
 	var headers = fmt.Sprintf(
 		"POST /upload HTTP/1.0\r\n"+
@@ -44,14 +44,29 @@ func sendImage() []byte {
 
 func createConnection() {
 	fmt.Println("createConnection")
-	var simple_request = sendSimpleHttpRequest()
-	// var simple_request = sendImage()
+	// var simple_request = sendSimpleHttpRequest()
+	var simple_request = sendImage()
 	conn, err := net.Dial("tcp", ":8080")
 	if err != nil {
-		//handle error
+		fmt.Println("Connection error:", err)
+        return
 	}
-	// fmt.Println(simple_request)
-	conn.Write([]byte(simple_request))
+
+	_, err = conn.Write([]byte(simple_request))
+	if err != nil {
+        fmt.Println("Błąd zapisu:", err)
+        return
+    }
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+        tcpConn.CloseWrite()
+    }
+	buffer := make([]byte, 4096)
+    n, err := conn.Read(buffer)
+    if err != nil {
+        fmt.Println("Błąd podczas czytania odpowiedzi:", err)
+        return
+    }
+	fmt.Printf("Otrzymano odpowiedź (%d bajtów):\n%s\n", n, string(buffer[:n]))
 }
 
 func main() {

@@ -12,10 +12,18 @@ import (
 	"strings"
 )
 
-var AvailableContentTypes = []string{"text/html", "image/jpeg"}
-
-func processHtml(*bufio.Scanner) {
-	fmt.Println("Process Html")
+func responseMessage(status int, body string) []byte {
+    length := len(body)
+    var headers = fmt.Sprintf("HTTP/1.0 %d OK\r\n"+
+        "Date: Sun, 05 Apr 2026 12:00:00 GMT\r\n"+
+        "Server: Apache/1.3.0\r\n"+
+        "Content-Type: text/html\r\n"+
+        "Content-Length: %d\r\n"+
+        "\r\n",
+        status, length)
+    
+    fullResponse := append([]byte(headers), []byte(body)...)
+    return fullResponse
 }
 
 func bytesToImage(data []byte) (image.Image, error) {
@@ -25,33 +33,10 @@ func bytesToImage(data []byte) (image.Image, error) {
 		return nil, err
 	}
 
-	fmt.Println("Zdekodowano format:", format)
+	fmt.Println("Format decoded:", format)
 	return img, nil
 }
 
-func processContentTypes(scanner *bufio.Scanner, msg HTTPMessage) {
-	if msg.Headers["Content-Type"] == "text/html" {
-		for scanner.Scan() {
-			line := scanner.Text()
-			if line == "" {
-				break
-			}
-			msg.Body += line
-		}
-	} else if msg.Headers["Content-Type"] == "image/jpeg" {
-		fmt.Println("Image")
-		var data []byte
-
-		for scanner.Scan() {
-			line := scanner.Bytes()
-			data = append(data, line...)
-		}
-		err := os.WriteFile("../../upload/village.jpg", data, 0666)
-		if err != nil {
-			fmt.Println("Can't save file", err)
-		}
-	}
-}
 
 type HTTPMessage struct {
 	StartLine string
@@ -81,7 +66,7 @@ func parseHttp(reader *bufio.Reader, conn net.Conn) error {
 		}
 	}
 
-	processBody(reader, &msg)
+	processBody(reader, &msg, conn)
 
 	return nil
 }
@@ -96,7 +81,7 @@ func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 
 	if err := parseHttp(reader, conn); err != nil {
-		fmt.Println("Koniec połączenia lub błąd:", err)
+		fmt.Println("End of connection or error:", err)
 	}
 }
 
@@ -115,7 +100,7 @@ func startHttpServer10() {
 
 }
 
-func processBody(reader io.Reader, msg *HTTPMessage) {
+func processBody(reader io.Reader, msg *HTTPMessage, conn net.Conn) {
 	lenStr, ok := msg.Headers["Content-Length"]
 	if !ok {
 		return
@@ -126,14 +111,18 @@ func processBody(reader io.Reader, msg *HTTPMessage) {
 
 	_, err := io.ReadFull(reader, data)
 	if err != nil {
-		fmt.Println("Błąd czytania danych:", err)
+		fmt.Println("Problem with data reading:", err)
+		conn.Write(responseMessage(400, "Something is wrong with request"))
 		return
 	}
 
 	if msg.Headers["Content-Type"] == "image/jpeg" {
 		os.MkdirAll("./upload", 0755)
-		os.WriteFile("./upload/village.jpg", data, 0644)
-		fmt.Println("Obrazek zapisany!")
+		err = os.WriteFile("./upload/village1.jpg", data, 0644)
+		if err != nil{
+			conn.Write(responseMessage(400, fmt.Sprintf("There was a problem with data send: %s", err)))
+		}
+		conn.Write(responseMessage(201, "Congratulation. You have sent image"))
 	} else {
 		msg.Body = string(data)
 	}
