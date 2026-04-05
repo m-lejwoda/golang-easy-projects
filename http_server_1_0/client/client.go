@@ -12,26 +12,34 @@ func sendSimpleHttpRequest() string {
 					<body>Witaj świecie!</body>
 				</html>`
 	var simple_request = fmt.Sprintf(
-		"HTTP/1.0 200 OK\r\n"+
+		"GET / HTTP/1.0\r\n"+
+		"Host: localhost\r\n"+
+		"User-Agent: MyGoClient/1.0\r\n"+
 			"Date: Wed, 25 Mar 2026 20:00:00 GMT\r\n"+
-			"Server: MyCustomServer/1.0\r\n"+
+			// "Server: MyCustomServer/1.0\r\n"+
 			"Content-Type: text/html\r\n"+
 			"Content-Length: %d\r\n"+
 			"\r\n"+
 			"%s", len(body), body)
 	return simple_request
 }
-func sendImage() string {
+func sendImage() []byte {
 	path := filepath.Join("/home/michal/PyCharmMiscProject/golang-easy-projects", "village.jpg")
 	data, err := os.ReadFile(path)
-	fmt.Println("path", path)
-	fmt.Println(string(data))
-	file, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Bląd odczytu")
 	}
-	fmt.Println(file)
-	return "test"
+	var headers = fmt.Sprintf(
+		"POST /upload HTTP/1.0\r\n"+
+			"Date: Wed, 25 Mar 2026 20:00:00 GMT\r\n"+
+			"Server: MyCustomServer/1.0\r\n"+
+			"Content-Type: image/jpeg\r\n"+
+			"Content-Length: %d\r\n"+
+			"\r\n",
+		len(data))
+
+	fullResponse := append([]byte(headers), data...)
+	return fullResponse
 }
 
 func createConnection() {
@@ -42,9 +50,8 @@ func createConnection() {
 	if err != nil {
 		//handle error
 	}
-	print(simple_request)
-	print(conn)
-	// conn.Write([]byte(simple_request))
+	// fmt.Println(simple_request)
+	conn.Write([]byte(simple_request))
 }
 
 func main() {
