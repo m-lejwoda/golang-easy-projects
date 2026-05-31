@@ -89,6 +89,7 @@ func (l *List[T]) Insert(t T, pos int) {
 	if l.Head == nil {
 		l.Head = n
 		l.Tail = n
+		return
 	}
 	if pos <= 0 {
 		n.Next = l.Head
