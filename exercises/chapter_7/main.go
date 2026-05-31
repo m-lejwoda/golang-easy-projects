@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"slices"
 )
 
 func main() {
-	// Przykład użycia, żeby sprawdzić czy działa:
 	liga := League{
 		Teams: []Team{},
 		Wins:  make(map[string]int),
@@ -17,6 +18,11 @@ func main() {
 	liga.MatchResult("Smoki", 6, "Wilki", 1)
 
 	liga.Ranking()
+	RankPrinter(liga, os.Stdout)
+}
+
+type Ranker interface {
+	Ranking() []string
 }
 
 type Team struct {
@@ -51,4 +57,14 @@ func (l League) Ranking() []string {
 	}
 
 	return keys
+}
+
+func RankPrinter(ranker Ranker, writer io.Writer) {
+	ranks := ranker.Ranking()
+	for _, rank := range ranks {
+		_, err := fmt.Fprintln(writer, rank)
+		if err != nil {
+			return
+		}
+	}
 }
