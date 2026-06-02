@@ -45,6 +45,11 @@ func main() {
 			fmt.Println("Check if as working")
 		}
 	}
+	fmt.Println("validateEmployeev2")
+	err = validateEmployeev2(empl)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func biggerThanSeven(num int) (int, error) {
@@ -64,6 +69,23 @@ func validateEmployee(e Employee) error {
 	}
 	if e.Id == 0 {
 		return ErrInvalidID
+	}
+	return nil
+}
+
+func validateEmployeev2(e Employee) error {
+	var err []error
+	if len(e.FirstName) == 0 {
+		err = append(err, EmptyFieldError{FieldName: "FirstName"})
+	}
+	if len(e.LastName) == 0 {
+		err = append(err, EmptyFieldError{FieldName: "LastName"})
+	}
+	if e.Id == 0 {
+		err = append(err, ErrInvalidID)
+	}
+	if len(err) > 0 {
+		return errors.Join(err...)
 	}
 	return nil
 }
