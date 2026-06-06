@@ -15,6 +15,8 @@ func main() {
 	fmt.Println(tree.Root.Right.Val)
 	fmt.Println(tree.Root.Left.Left.Val)
 	fmt.Println(tree.Root.Left.Right.Val)
+	nineteen := tree.Bfs(19)
+	fmt.Println(nineteen)
 }
 
 type Node struct {
@@ -57,4 +59,36 @@ func (t *Tree) Add(val int) {
 			queue = append(queue, current.Right)
 		}
 	}
+}
+
+func (t *Tree) Bfs(look int) []*Node {
+	visited := []*Node{}
+	if t.Root == nil {
+		return visited
+	}
+	visited = append(visited, t.Root)
+	queue := []*Node{t.Root}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if current.Left != nil {
+			if current.Left.Val == look {
+				visited = append(visited, current.Left)
+				return visited
+			} else {
+				visited = append(visited, current.Left)
+				queue = append(queue, current.Left)
+			}
+		}
+		if current.Right != nil {
+			if current.Right.Val == look {
+				visited = append(visited, current.Right)
+				return visited
+			} else {
+				visited = append(visited, current.Right)
+				queue = append(queue, current.Right)
+			}
+		}
+	}
+	return visited
 }
